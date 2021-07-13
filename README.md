@@ -14,3 +14,5 @@ python3 authenticator.py
 * Type your username and password (the password will not be shown on your screen when you type it).
 * If everything goes as expected, you should see a message **INFO - Sending request to keep alive.**
 * Minimize the terminal or Command Prompt with the script and you should not see the authentication page ever again !!
+
+### Note: Sign-out of the ISM authentication page before running this script###
