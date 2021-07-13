@@ -8,7 +8,7 @@ For the options (e.g. to use a netrc file to store the credentials), see the det
 * Make sure your system has [Python3](https://www.python.org/download/releases/3.0/) installed.
 * Download the authenticator script.
 * Execute the command:**
-```bash
+```
 python3 authenticator
 ```**
 * Type your username and password (the password will not be shown on your screen when you type it).
