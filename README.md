@@ -9,7 +9,7 @@ For the options (e.g. to use a netrc file to store the credentials), see the det
 * Download the authenticator script.
 * Execute the command:**
 ```
-python3 authenticator
+python3 authenticator.py
 ```**
 * Type your username and password (the password will not be shown on your screen when you type it).
 * If everything goes as expected, you should see a message **INFO - Sending request to keep alive.**
