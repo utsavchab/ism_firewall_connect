@@ -1,29 +1,16 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This is an authentication script for IIT(ISM) Employees and Students. It is mostly the same as the script available [here](https://github.com/swapnilsm/firewall-auth-py3).
+For the options (e.g. to use a netrc file to store the credentials), see the details in the above repository. Special thanks to [Swapnil Mahajan](https://github.com/swapnilsm).
 
-### What is this repository for? ###
+### Simple Usage ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Make sure your system has [Python3](https://www.python.org/download/releases/3.0/) installed.
+* Download the authenticator script.
+* Execute the command:**
+```bash
+python3 authenticator
+```**
+* Type your username and password (the password will not be shown on your screen when you type it).
+* If everything goes as expected, you should see a message **INFO - Sending request to keep alive.**
+* Minimize the terminal or Command Prompt with the script and you should not see the authentication page ever again !!
