@@ -232,7 +232,7 @@ def get_credentials(options, args):
       logger.info("Could not find credentials in netrc file.")
     except:
       logger.info("Could not read from netrc file.")
-
+  print("ISM Firewall Login")
   if len(args) == 0:
     # Get the username from the input
     username = input("Username: ")
@@ -242,7 +242,9 @@ def get_credentials(options, args):
 
   if len(args) <= 1:
     # Read the password without echoing it
+    print("(You wont see password output on screen, just type the password and press enter):")
     password = getpass.getpass()
+    
   else:
     password = args[1]
 
