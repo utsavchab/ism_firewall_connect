@@ -1,29 +1,3 @@
-#!/usr/bin/python
-
-# Copyright (c) 2009 Siddharth Agarwal
-# Ported to Python 3.x by Swapnil S. Mahajan
-#
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following
-# conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
-
 
 import getpass
 import http.client          
@@ -160,10 +134,13 @@ def login():
     conn.request("GET", "/")
     response = conn.getresponse()
     # 303 leads to the auth page, so it means we're not logged in
-    if (response.status != 303):
+    if (response.status != 200):
       return (LoginState.AlreadyLoggedIn, response.status)
-
-    authlocation = response.getheader("Location")
+    
+    match = re.search(r'window.location="([^"]+)"', str(response.read())) 
+    authlocation = match.group(1)
+    
+    # authlocation = response.getheader("Location")
   finally:
     conn.close()
 
@@ -199,9 +176,9 @@ def login():
     postData = postResponse.read()
   finally:
     postconn.close()
-
-  # Look for the keepalive URL
-  keepaliveMatch = re.search(r"href=\"(.+?)\"", str(postData))
+  
+  keepaliveMatch = re.search(r'window.location="([^"]+)"', str(postData)) 
+  
   if keepaliveMatch is None:
     # Whoops, unsuccessful -- probably the username and password didn't match
     logger.fatal("Authentication unsuccessful, check your username and password.")
