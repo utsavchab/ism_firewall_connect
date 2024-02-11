@@ -34,6 +34,9 @@ def start_func():
   except (http.client.HTTPException, socket.error) as e:
     logger.info("Exception |%s| while trying to log in. Retrying in %d seconds." %
                 (e, ERROR_RETRY_SECS))
+    print("------------------------------------------------------------------------")
+    print("Note: Sign-out of the ISM authentication page before running this script")
+    print("------------------------------------------------------------------------")
     return (FirewallState.Start, ERROR_RETRY_SECS, None)
 
   # Check whether we're logged in
@@ -129,11 +132,13 @@ def login():
   """
   logger = logging.getLogger("FirewallLogger")
   # Find out where to auth
+  
   try:
+    print("Logging to the firewall...")
     conn = http.client.HTTPConnection("74.125.236.51:80")
     conn.request("GET", "/")
     response = conn.getresponse()
-    # 303 leads to the auth page, so it means we're not logged in
+    # 200 leads to the auth page, so it means we're not logged in
     if (response.status != 200):
       return (LoginState.AlreadyLoggedIn, response.status)
     
