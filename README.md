@@ -2,7 +2,7 @@
 
 ## Features
 1. Login once, no need to do it again in your life unless you signout.
-2. Easily log out of keepalive by pressing 'q' in the terminal.
+2. Easily log out of keepalive by pressing 'q' in the terminal. (This will help you to logout from the current session without keeping track of keepalive url.)
 3. Sign out and log out of your username by pressing 'rq' in the terminal. (In case you want to change the username and password in the script)
 
 
