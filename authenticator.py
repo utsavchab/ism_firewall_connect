@@ -71,6 +71,7 @@ def logged_in_func(keepaliveurl):
   except http.client.BadStatusLine:
     logger.info("The keepalive URL %s doesn't work. Attempting to log in again." %
                 keepaliveurl.geturl())
+    keyring.delete_password("ISMFirewall", "keepAliveUrl")
     return (FirewallState.Start, 0, None)
   except (http.client.HTTPException, socket.error) as e:
     logger.info("Exception |%s| while trying to keep alive. Retrying in %d seconds." %
