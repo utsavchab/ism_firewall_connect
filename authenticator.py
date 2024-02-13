@@ -12,7 +12,6 @@ import gc
 import netrc
 import keyring 
 import os
-import keyboard
 import threading
 import time
 
