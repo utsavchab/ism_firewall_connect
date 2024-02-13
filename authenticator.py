@@ -11,13 +11,79 @@ import socket
 import gc
 import netrc
 import keyring 
-
-class FirewallState:
-  Start, LoggedIn, End = list(range(3))
+import os
+import keyboard
+import threading
+import time
 
 # Globals, set right in the beginning
 username = None
 password = None
+args = None
+
+
+class LoginState:
+  AlreadyLoggedIn, InvalidCredentials, Successful = list(range(3))
+  
+class FirewallState:
+  Start, LoggedIn, End = list(range(3))
+
+# To logout when exit from program
+def atexit_logout():
+    """
+    Log out from firewall authentication. This is supposed to run whenever the
+    program exits.
+    """
+    
+    # state = FirewallState.Start
+    
+    logger = logging.getLogger("FirewallLogger")
+    
+    if state == FirewallState.LoggedIn:
+      url = args[0]
+      logouturl = urllib.parse.ParseResult(url.scheme, url.netloc, "/logout",
+                                       url.params, url.query, url.fragment)
+      try:
+        logger.info("Logging out with URL %s" % logouturl.geturl())
+        conn = http.client.HTTPSConnection(logouturl.netloc)
+        conn.request("GET", logouturl.path + "?" + logouturl.query)
+        response = conn.getresponse()
+        response.read()
+      except (http.client.HTTPException, socket.error) as e:
+        # Just print an error message
+        logger.info("Exception |%s| while logging out." % e)
+      finally:
+        conn.close()
+        keyring.delete_password("ISMFirewall", "keepAliveUrl")
+    print("Exiting...")
+    os._exit(1)
+    
+# to rest the user credentials
+def reset_login():
+    if(keyring.get_password("ISMFirewall","username")):
+      print("Removing username and password...")
+      keyring.delete_password("ISMFirewall", "username")
+      keyring.delete_password("ISMFirewall", "password")
+    atexit_logout()
+    
+    
+
+# input thread
+def input_thread():
+    global user_input
+    while True:
+      user_input = input()
+      if user_input.lower() == 'q':
+        atexit_logout()
+        break
+      elif user_input.lower() == "rq":
+        reset_login()
+        break
+          
+          
+
+
+
 
 def start_func():
   """
@@ -91,33 +157,14 @@ def run_state_machine():
   """
   Runs the state machine defined above.
   """
+  global state
   state = FirewallState.Start
-  args = None
+  global args
   sleeptime = 0
-  def atexit_logout():
-    """
-    Log out from firewall authentication. This is supposed to run whenever the
-    program exits.
-    """
-    logger = logging.getLogger("FirewallLogger")
-    if state == FirewallState.LoggedIn:
-      url = args[0]
-      logouturl = urllib.parse.ParseResult(url.scheme, url.netloc, "/logout",
-                                       url.params, url.query, url.fragment)
-      try:
-        logger.info("Logging out with URL %s" % logouturl.geturl())
-        conn = http.client.HTTPSConnection(logouturl.netloc)
-        conn.request("GET", logouturl.path + "?" + logouturl.query)
-        response = conn.getresponse()
-        response.read()
-      except (http.client.HTTPException, socket.error) as e:
-        # Just print an error message
-        logger.info("Exception |%s| while logging out." % e)
-      finally:
-        conn.close()
-        keyring.delete_password("ISMFirewall", "keepAliveUrl")
-
   atexit.register(atexit_logout)
+  
+  
+  
 
   while True:
     statefunc = state_functions[state]
@@ -128,8 +175,7 @@ def run_state_machine():
     if sleeptime > 0:
       time.sleep(sleeptime)
 
-class LoginState:
-  AlreadyLoggedIn, InvalidCredentials, Successful = list(range(3))
+
 
 def login():
   """
@@ -142,6 +188,7 @@ def login():
   # Find out where to auth
   
   try:
+    
     print("Logging to the firewall...")
     conn = http.client.HTTPConnection("74.125.236.51:80")
     conn.request("GET", "/")
@@ -194,9 +241,14 @@ def login():
   
   if keepaliveMatch is None:
     # Whoops, unsuccessful -- probably the username and password didn't match
+    
     logger.fatal("Authentication unsuccessful, check your username and password.")
     return (LoginState.InvalidCredentials, None)
 
+  # The credentials are encrypted and stored in the Credential Manager, providing a secure storage location.
+  keyring.set_password("ISMFirewall", "username", username) 
+  keyring.set_password("ISMFirewall", "password", password)
+  
   keepaliveURL = keepaliveMatch.group(1)
   
   keyring.set_password("ISMFirewall", "keepAliveUrl", keepaliveURL) 
@@ -241,13 +293,17 @@ def get_credentials(options, args):
       logger.info("Could not find credentials in netrc file.")
     except:
       logger.info("Could not read from netrc file.")
-  print("ISM Firewall Login")
-  stored_username = keyring.get_password("ISMFirewall", "username")
-  stored_password = keyring.get_password("ISMFirewall", "password")
+  print("ISM Firewall Login\n")
+  print("-----------------KEYBOARD GUIDE--------------------")
+  print("Press 'q': Log out and Exit script")
+  print("Press 'rq': Reset username, Log out and Exit script")
+  print("---------------------------------------------------")
+  username = keyring.get_password("ISMFirewall", "username")
+  password = keyring.get_password("ISMFirewall", "password")
   
-  if stored_username and stored_password:
-    print("Logging In with username",stored_username)
-    return (stored_username, stored_password)
+  if username and password:
+    print("Logging In with username",username)
+    return (username, password)
   else:
     if len(args) == 0:
       # Get the username from the input
@@ -263,10 +319,6 @@ def get_credentials(options, args):
       
     else:
       password = args[1]
-
-    # The credentials are encrypted and stored in the Credential Manager, providing a secure storage location.
-    keyring.set_password("ISMFirewall", "username", username) 
-    keyring.set_password("ISMFirewall", "password", password)
     
     return (username, password)
 
@@ -287,6 +339,8 @@ def init_logger(options):
 Main function
 """
 def main(argv = None):
+  
+  
   if argv is None:
     argv = sys.argv[1:]
 
@@ -310,8 +364,12 @@ def main(argv = None):
   # Try authenticating!
   global username, password
   username, password = get_credentials(options, args)
+  
+  input_thread_1 = threading.Thread(target=input_thread, daemon=True)
+  input_thread_1.start()
   run_state_machine()
   return 0
 
 if __name__ == "__main__":
+  user_input = None
   sys.exit(main())
