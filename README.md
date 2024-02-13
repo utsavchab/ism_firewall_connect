@@ -1,5 +1,11 @@
 # README
 
+## Features
+1. Login once, no need to do it again in your life unless you signout.
+2. Easily log out of keepalive by pressing 'q' in the terminal.
+3. Sign out and log out of your username by pressing 'rq' in the terminal. (In case you want to change the username and password in the script)
+
+
 ## Simple Usage
 
 ### Note: Sign-out of the ISM authentication page before running this script###
