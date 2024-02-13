@@ -1,4 +1,3 @@
-
 import getpass
 import http.client          
 import urllib.request, urllib.parse, urllib.error
@@ -11,6 +10,7 @@ import atexit
 import socket
 import gc
 import netrc
+import keyring 
 
 class FirewallState:
   Start, LoggedIn, End = list(range(3))
@@ -28,9 +28,15 @@ def start_func():
   ERROR_RETRY_SECS = 5
   LOGGED_IN_RETRY_SECS = 5
   logger = logging.getLogger("FirewallLogger")
+  
+  prevKeepAliveUrl = keyring.get_password("ISMFirewall", "keepAliveUrl")
+  if prevKeepAliveUrl: # Prev session keepalive url.
+    data = urllib.parse.urlparse(prevKeepAliveUrl)
+    return (FirewallState.LoggedIn, 0 ,[data])
 
   try:
     loginstate, data = login()
+    
   except (http.client.HTTPException, socket.error) as e:
     logger.info("Exception |%s| while trying to log in. Retrying in %d seconds." %
                 (e, ERROR_RETRY_SECS))
@@ -108,6 +114,7 @@ def run_state_machine():
         logger.info("Exception |%s| while logging out." % e)
       finally:
         conn.close()
+        keyring.delete_password("ISMFirewall", "keepAliveUrl")
 
   atexit.register(atexit_logout)
 
@@ -190,7 +197,8 @@ def login():
     return (LoginState.InvalidCredentials, None)
 
   keepaliveURL = keepaliveMatch.group(1)
-
+  
+  keyring.set_password("ISMFirewall", "keepAliveUrl", keepaliveURL) 
   logger.info("The keep alive URL is: " + keepaliveURL)
   logger.debug(postData)
   return (LoginState.Successful, urllib.parse.urlparse(keepaliveURL))
@@ -233,22 +241,33 @@ def get_credentials(options, args):
     except:
       logger.info("Could not read from netrc file.")
   print("ISM Firewall Login")
-  if len(args) == 0:
-    # Get the username from the input
-    username = input("Username: ")
+  stored_username = keyring.get_password("ISMFirewall", "username")
+  stored_password = keyring.get_password("ISMFirewall", "password")
+  
+  if stored_username and stored_password:
+    print("Logging In with username",stored_username)
+    return (stored_username, stored_password)
   else:
-    # First member of args
-    username = args[0]
+    if len(args) == 0:
+      # Get the username from the input
+      username = input("Username: ")
+    else:
+      # First member of args
+      username = args[0]
 
-  if len(args) <= 1:
-    # Read the password without echoing it
-    print("(You wont see password output on screen, just type the password and press enter):")
-    password = getpass.getpass()
+    if len(args) <= 1:
+      # Read the password without echoing it
+      print("(You wont see password output on screen, just type the password and press enter):")
+      password = getpass.getpass()
+      
+    else:
+      password = args[1]
+
+    # The credentials are encrypted and stored in the Credential Manager, providing a secure storage location.
+    keyring.set_password("ISMFirewall", "username", username) 
+    keyring.set_password("ISMFirewall", "password", password)
     
-  else:
-    password = args[1]
-
-  return (username, password)
+    return (username, password)
 
 def init_logger(options):
   logger = logging.getLogger("FirewallLogger")
