@@ -38,6 +38,6 @@ Then you will have to logout from the current login session. (Search for keepali
 2024-02-11 22:32:43,750 - INFO - Sending request to keep alive.`
 
 
-### New Features you can add:
+## New Features you can add:
 - Convert script to exe file for Linux/MacOS and then inject this exe file in auto-startup of the device. (After that whenever you start your device this script will automatically start and no need to run this script manually.)
   
